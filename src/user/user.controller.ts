@@ -47,27 +47,28 @@ export class UserController {
   }
 
   @Get('all')
-  getAll(dto: UserDto) {
+  getAll(@Body() dto: UserDto) {
     return this.userService.getAll(dto);
   }
 
   @Post('create')
-  createUser(dto: UserDto) {
+  createUser(@Body() dto: UserDto) {
+    console.log('Inside post request createUser method ! ', dto);
     return this.userService.create(dto);
   }
 
   @Put('update')
-  updateUser(dto: UserDto) {
+  updateUser(@Body() dto: UserDto) {
     return this.userService.update(dto);
   }
 
   @Delete('delete')
-  deleteUser(dto: UserDto) {
+  deleteUser(@Body() dto: UserDto) {
     return this.userService.delete(dto);
   }
 
   @Delete('deleteAll')
-  deleteAll(dto: UserDto) {
+  deleteAll(@Body() dto: UserDto) {
     return this.userService.deleteAll(dto);
   }
 }
