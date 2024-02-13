@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RegisteredUser } from 'src/entity/registered.user.entity';
 import { Permission } from 'src/entity/permissions.entity';
+import { Student } from 'src/entity/student.entity';
 
 @Module({
   controllers: [UserController],
@@ -13,7 +14,7 @@ import { Permission } from 'src/entity/permissions.entity';
   imports: [
     AuthModule,
     ConfigModule,
-    TypeOrmModule.forFeature([RegisteredUser, Permission]),
+    TypeOrmModule.forFeature([RegisteredUser, Permission, Student]),
   ],
   exports: [],
 })
