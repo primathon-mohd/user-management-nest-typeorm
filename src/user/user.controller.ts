@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Post,
   Put,
   Req,
@@ -18,10 +19,14 @@ import { JwtGuard } from 'src/auth/guard';
 export class UserController {
   constructor(private userService: UserService) {}
 
-  @Get('info')
+  @Get('info/:id')
   // @UseGuards(AuthGuard('jwt'))
   //   @UseGuards(JwtGuard)
-  getUserInfo(@Body() dto: UserDto, @Req() req: Request) {
+  getUserInfo(
+    @Body() dto: UserDto,
+    @Req() req: Request,
+    @Param('id') id: number,
+  ) {
     console.log(req.user, typeof req.user);
     // const userInfo = req.user;
     //userInfo.email   === { sub: 6, email: 'efg@gmail.com', iat: 1707394707, exp: 1707395607 }
@@ -42,7 +47,7 @@ export class UserController {
     // }
 
     console.log('Inside getUserInfo !', dto.email, dto.roles);
-    const msg = this.userService.get(dto);
+    const msg = this.userService.get(dto, id);
     return msg;
   }
 
@@ -57,14 +62,14 @@ export class UserController {
     return this.userService.create(dto);
   }
 
-  @Put('update')
-  updateUser(@Body() dto: UserDto) {
-    return this.userService.update(dto);
+  @Put('update/:id')
+  updateUser(@Body() dto: UserDto, @Param('id') id: number) {
+    return this.userService.update(dto, id);
   }
 
-  @Delete('delete')
-  deleteUser(@Body() dto: UserDto) {
-    return this.userService.delete(dto);
+  @Delete('delete/:id')
+  deleteUser(@Body() dto: UserDto, @Param('id') id: number) {
+    return this.userService.delete(dto, id);
   }
 
   @Delete('deleteAll')

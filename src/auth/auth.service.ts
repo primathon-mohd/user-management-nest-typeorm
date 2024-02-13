@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
@@ -16,6 +21,7 @@ import {
 } from './dto';
 import { TypeRole } from 'src/entity/user.abstract.entity';
 import { Permission } from 'src/entity/permissions.entity';
+import e from 'express';
 
 @Injectable()
 export class AuthService {
@@ -38,8 +44,13 @@ export class AuthService {
     // console.log(hash);
     // Now, insert into table..
     dto.password = hash;
-    const user = await this.userRepository.save(dto);
-    console.log(user);
+    let user: any;
+    try {
+      user = await this.userRepository.save(dto);
+      console.log(user);
+    } catch (error) {
+      throw new BadRequestException('Account with this email already exists.');
+    }
     //Now, calling permission insertion to insertion rows in Permission table.
     const permission = await this.permissionInsertion(user);
 
@@ -167,7 +178,7 @@ export class AuthService {
       email: dto.email,
     });
     if (!user) {
-      throw new ForbiddenException('Invalid email | Not registered yet');
+      throw new NotFoundException('Invalid email | Not registered yet');
     }
     console.log(user.email, user.password);
     // Check if hash password ,received matches the hash password of the user.
@@ -197,7 +208,7 @@ export class AuthService {
       email,
     };
     const token = await this.jwtService.signAsync(payload, {
-      expiresIn: '15m',
+      expiresIn: '60m',
       secret: this.config.get('JWT_SECRET'),
     });
     return { access_token: token };
