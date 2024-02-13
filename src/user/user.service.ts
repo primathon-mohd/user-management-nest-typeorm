@@ -101,6 +101,7 @@ export class UserService {
     const del = await this.studentRepository.delete({
       stud_id: id,
     });
+    console.log(del);
     return del;
   }
 
