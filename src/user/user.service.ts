@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { StudentDto, UserDto } from './dto';
 import { Permission } from 'src/entity/permissions.entity';
 import { RegisteredUser } from 'src/entity/registered.user.entity';
@@ -21,19 +25,47 @@ export class UserService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(dto: UserDto, id: number) {
     console.log(dto);
+    const role = await this.userRepository.find({
+      select: {
+        role: true,
+      },
+      where: {
+        email: dto.email,
+      },
+    });
+    if (role.length == 0) {
+      throw new NotFoundException('User Not FOUND');
+    }
     const student = await this.studentRepository.findOneBy({
       stud_id: id,
     });
+    if (!student) {
+      throw new NotFoundException('User Not FOUND');
+    }
     console.log(student);
     return student;
   }
 
   async getAll(dto: UserDto) {
     console.log(dto);
+    const role = await this.userRepository.find({
+      select: {
+        role: true,
+      },
+      where: {
+        email: dto.email,
+      },
+    });
+    if (role.length == 0) {
+      throw new NotFoundException('User Not FOUND');
+    }
     const students = await this.studentRepository.find({
       select: {},
       where: {},
     });
+    if (students.length === 0) {
+      throw new NotFoundException('User Not FOUND');
+    }
     console.log(students);
     return students;
   }
@@ -48,6 +80,9 @@ export class UserService {
         email: dto.email,
       },
     });
+    if (role.length == 0) {
+      throw new NotFoundException('User Not FOUND');
+    }
     console.log(role.at(0).role);
     if (role.at(0).role !== TypeRole.SUPER)
       throw new ForbiddenException(
@@ -66,6 +101,9 @@ export class UserService {
     const user = await this.userRepository.findBy({
       email: dto.email,
     });
+    if (user.length === 0) {
+      throw new NotFoundException(' Not FOUND');
+    }
     console.log(user.at(0).role);
     if (user.at(0).role === TypeRole.USER) {
       throw new ForbiddenException('Not authorized to update , ask  admin !!');
@@ -92,6 +130,10 @@ export class UserService {
         email: dto.email,
       },
     });
+    if (role.length === 0) {
+      throw new NotFoundException('User Not FOUND');
+    }
+
     console.log(role.at(0).role);
     if (role.at(0).role !== TypeRole.SUPER)
       throw new ForbiddenException(
@@ -115,6 +157,9 @@ export class UserService {
         email: dto.email,
       },
     });
+    if (role.length === 0) {
+      throw new NotFoundException(' Not FOUND');
+    }
     console.log(role.at(0).role);
     if (role.at(0).role !== TypeRole.SUPER)
       throw new ForbiddenException(
