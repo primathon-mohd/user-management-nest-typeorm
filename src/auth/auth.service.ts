@@ -1,6 +1,9 @@
+import { Permission } from './../entity/permissions.entity';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -20,8 +23,6 @@ import {
   putUrl,
 } from './dto';
 import { TypeRole } from 'src/entity/user.abstract.entity';
-import { Permission } from 'src/entity/permissions.entity';
-import e from 'express';
 
 @Injectable()
 export class AuthService {
@@ -48,15 +49,31 @@ export class AuthService {
     try {
       user = await this.userRepository.save(dto);
       console.log(user);
-    } catch (error) {
-      throw new BadRequestException('Account with this email already exists.');
+    } catch (err) {
+      throw new BadRequestException(
+        'Account with this email already exists.',
+        err.error,
+      );
     }
     //Now, calling permission insertion to insertion rows in Permission table.
-    const permission = await this.permissionInsertion(user);
+    let permission: any;
+    try {
+      permission = await this.permissionInsertion(user);
+    } catch (err) {
+      console.log(
+        'Exception caught while insertion into permission table !',
+        err.error,
+      );
+    }
 
     delete user.password;
     // For token generation , using JWT .. and then returning to the user.
-    const token = await this.signToken(user.id, user.email);
+    let token: any;
+    try {
+      token = await this.signToken(user.id, user.email);
+    } catch (err) {
+      console.log('Error while generating token !!', err.error);
+    }
     return {
       token,
       user,
@@ -82,7 +99,11 @@ export class AuthService {
         requestUrl: obj.url,
       });
 
-      await this.permitRepository.save(obj);
+      try {
+        await this.permitRepository.save(obj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
     } else if (user.role === TypeRole.ADMIN) {
       // logic for insertion
       const getObj = new PermissionDto();
@@ -96,8 +117,11 @@ export class AuthService {
         requestMethod: getObj.httpVerb,
         requestUrl: getObj.url,
       });
-
-      await this.permitRepository.save(getObj);
+      try {
+        await this.permitRepository.save(getObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
       const updateObj = new PermissionDto();
       updateObj.role = 'admin';
       updateObj.httpVerb = 'put';
@@ -110,7 +134,11 @@ export class AuthService {
         requestUrl: updateObj.url,
       });
 
-      await this.permitRepository.save(updateObj);
+      try {
+        await this.permitRepository.save(updateObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
     } else if (user.role === TypeRole.SUPER) {
       // logic for insertion
       const getObj = new PermissionDto();
@@ -125,7 +153,11 @@ export class AuthService {
         requestUrl: getObj.url,
       });
 
-      await this.permitRepository.save(getObj);
+      try {
+        await this.permitRepository.save(getObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
       const updateObj = new PermissionDto();
       updateObj.role = 'super-admin';
       updateObj.httpVerb = 'put';
@@ -138,7 +170,11 @@ export class AuthService {
         requestUrl: updateObj.url,
       });
 
-      await this.permitRepository.save(updateObj);
+      try {
+        await this.permitRepository.save(updateObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
       const createObj = new PermissionDto();
       createObj.role = 'super-admin';
       createObj.httpVerb = 'post';
@@ -151,7 +187,11 @@ export class AuthService {
         requestUrl: createObj.url,
       });
 
-      await this.permitRepository.save(createObj);
+      try {
+        await this.permitRepository.save(createObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
       const deleteObj = new PermissionDto();
       deleteObj.role = 'super-admin';
       deleteObj.httpVerb = 'delete';
@@ -163,7 +203,11 @@ export class AuthService {
         requestUrl: deleteObj.url,
       });
 
-      await this.permitRepository.save(deleteObj);
+      try {
+        await this.permitRepository.save(deleteObj);
+      } catch (err) {
+        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      }
     } else {
       throw new ForbiddenException(' Unknown user role observed !!');
     }
@@ -188,7 +232,13 @@ export class AuthService {
     if (!psMatches) {
       throw new ForbiddenException('Invalid Password !!');
     }
-    const permission = await this.permissionSearch(user);
+    let permission: any;
+    try {
+      permission = await this.permissionSearch(user);
+    } catch (err) {
+      console.log(err.error);
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
+    }
     delete user.password;
     // Instead of constant value =1 , I will use id number from database.
     const token = await this.signToken(user.id, user.email);
@@ -207,26 +257,36 @@ export class AuthService {
       sub: userId,
       email,
     };
-    const token = await this.jwtService.signAsync(payload, {
-      expiresIn: '60m',
-      secret: this.config.get('JWT_SECRET'),
-    });
+    let token: any;
+    try {
+      token = await this.jwtService.signAsync(payload, {
+        expiresIn: '2h',
+        secret: this.config.get('JWT_SECRET'),
+      });
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_GATEWAY);
+    }
     return { access_token: token };
   }
 
   async permissionSearch(userInfo: RegisteredUser) {
     console.log(userInfo);
-    const rows = await this.permitRepository.find({
-      select: {
-        url: true,
-        httpVerb: true,
-      },
-      where: {
-        emailId: userInfo.email,
-        // 'registered-user': userInfo.email,
-      },
-    });
-    console.log(rows);
+    let rows: any;
+    try {
+      rows = await this.permitRepository.find({
+        select: {
+          url: true,
+          httpVerb: true,
+        },
+        where: {
+          emailId: userInfo.email,
+          // 'registered-user': userInfo.email,
+        },
+      });
+      console.log(rows);
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
     return rows;
   }
 
