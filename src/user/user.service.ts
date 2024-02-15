@@ -5,11 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { StudentDto, UserDto } from './dto';
+import { StudentDto } from './dto';
 import { Permission } from 'src/entity/permissions.entity';
 import { RegisteredUser } from 'src/entity/registered.user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { TypeRole } from 'src/entity/user.abstract.entity';
 import { Student } from 'src/entity/student.entity';
 
@@ -25,8 +25,7 @@ export class UserService {
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async get(dto: UserDto, id: number) {
-    console.log(dto);
+  async get(userEmail: string, id: number) {
     let roles: RegisteredUser[];
     try {
       roles = await this.userRepository.find({
@@ -34,7 +33,7 @@ export class UserService {
           role: true,
         },
         where: {
-          email: dto.email,
+          email: userEmail,
         },
       });
     } catch (err) {
@@ -59,8 +58,7 @@ export class UserService {
     return student;
   }
 
-  async getAll(dto: UserDto) {
-    console.log(dto);
+  async getAll(userEmail: string) {
     let roles: RegisteredUser[];
     try {
       roles = await this.userRepository.find({
@@ -68,7 +66,7 @@ export class UserService {
           role: true,
         },
         where: {
-          email: dto.email,
+          email: userEmail,
         },
       });
     } catch (err) {
@@ -94,7 +92,7 @@ export class UserService {
     return students;
   }
 
-  async create(dto: UserDto) {
+  async create(dto: StudentDto, userEmail: string) {
     console.log(dto);
     let role: RegisteredUser[];
     try {
@@ -103,7 +101,7 @@ export class UserService {
           role: true,
         },
         where: {
-          email: dto.email,
+          email: userEmail,
         },
       });
     } catch (err) {
@@ -118,11 +116,9 @@ export class UserService {
       throw new ForbiddenException(
         'Not authorized to create , ask super admin !!',
       );
-    const obj = new StudentDto();
-    obj.name = 'XYZ';
-    obj.mobile = String('9889121212');
+
     try {
-      const student = await this.studentRepository.save(obj);
+      const student = await this.studentRepository.save(dto);
       console.log(student);
       return student;
     } catch (err) {
@@ -130,12 +126,12 @@ export class UserService {
     }
   }
 
-  async update(dto: UserDto, personId: number) {
+  async update(dto: StudentDto, id: number, userEmail: string) {
     console.log('Inside update method !!', dto);
     let user: RegisteredUser[];
     try {
       user = await this.userRepository.findBy({
-        email: dto.email,
+        email: userEmail,
       });
     } catch (err) {
       throw new NotFoundException(' Not FOUND');
@@ -143,17 +139,29 @@ export class UserService {
     if (user.length === 0) {
       throw new NotFoundException(' Not FOUND');
     }
-    console.log(user.at(0).role);
+    console.log(user.at(0).role, user);
     if (user.at(0).role === TypeRole.USER) {
       throw new ForbiddenException('Not authorized to update , ask  admin !!');
     }
-    const personPayload = { name: 'John Abraham' };
-    let studentRow: any;
+    let stud: Student;
+    try {
+      stud = await this.studentRepository.findOneBy({
+        stud_id: id,
+      });
+    } catch (err) {}
+
+    if (!stud) {
+      throw new NotFoundException(
+        'Student with Given id is not found for update!!',
+      );
+    }
+
+    let studentRow: UpdateResult;
     try {
       studentRow = await this.studentRepository
         .createQueryBuilder()
-        .update(Student, personPayload)
-        .where('stud_id = :stud_id', { stud_id: personId })
+        .update(Student, dto)
+        .where('stud_id = :stud_id', { stud_id: id })
         .returning('*')
         .updateEntity(true)
         .execute();
@@ -163,8 +171,7 @@ export class UserService {
     return studentRow;
   }
 
-  async delete(dto: UserDto, id: number) {
-    console.log(dto);
+  async delete(userEmail: string, id: number) {
     let role: RegisteredUser[];
     try {
       role = await this.userRepository.find({
@@ -172,7 +179,7 @@ export class UserService {
           role: true,
         },
         where: {
-          email: dto.email,
+          email: userEmail,
         },
       });
     } catch (err) {
@@ -189,6 +196,20 @@ export class UserService {
       throw new ForbiddenException(
         'Not authorized to delete , ask super admin !!',
       );
+
+    let stud: Student;
+    try {
+      stud = await this.studentRepository.findOneBy({
+        stud_id: id,
+      });
+    } catch (err) {}
+
+    if (!stud) {
+      throw new NotFoundException(
+        'Student with Given id is not found for update!!',
+      );
+    }
+
     let del: any;
     try {
       del = await this.studentRepository.delete({
@@ -201,16 +222,15 @@ export class UserService {
     return del;
   }
 
-  async deleteAll(dto: UserDto) {
-    console.log(dto);
-    let role: any;
+  async deleteAll(userEmail: string) {
+    let role: RegisteredUser[];
     try {
       role = await this.userRepository.find({
         select: {
           role: true,
         },
         where: {
-          email: dto.email,
+          email: userEmail,
         },
       });
     } catch (err) {
