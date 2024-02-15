@@ -27,20 +27,31 @@ export class UserService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(dto: UserDto, id: number) {
     console.log(dto);
-    const role = await this.userRepository.find({
-      select: {
-        role: true,
-      },
-      where: {
-        email: dto.email,
-      },
-    });
-    if (role.length == 0) {
+    let roles: RegisteredUser[];
+    try {
+      roles = await this.userRepository.find({
+        select: {
+          role: true,
+        },
+        where: {
+          email: dto.email,
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
+    }
+
+    if (roles.length == 0) {
       throw new NotFoundException('User Not FOUND');
     }
-    const student = await this.studentRepository.findOneBy({
-      stud_id: id,
-    });
+    let student: Student;
+    try {
+      student = await this.studentRepository.findOneBy({
+        stud_id: id,
+      });
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
+    }
     if (!student) {
       throw new NotFoundException('Student Not FOUND');
     }
@@ -50,21 +61,32 @@ export class UserService {
 
   async getAll(dto: UserDto) {
     console.log(dto);
-    const role = await this.userRepository.find({
-      select: {
-        role: true,
-      },
-      where: {
-        email: dto.email,
-      },
-    });
-    if (role.length == 0) {
+    let roles: RegisteredUser[];
+    try {
+      roles = await this.userRepository.find({
+        select: {
+          role: true,
+        },
+        where: {
+          email: dto.email,
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
+    }
+
+    if (roles.length == 0) {
       throw new NotFoundException('User Not FOUND');
     }
-    const students = await this.studentRepository.find({
-      select: {},
-      where: {},
-    });
+    let students: Student[];
+    try {
+      students = await this.studentRepository.find({
+        select: {},
+        where: {},
+      });
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
+    }
     if (students.length === 0) {
       throw new NotFoundException('User Not FOUND');
     }
@@ -99,9 +121,13 @@ export class UserService {
     const obj = new StudentDto();
     obj.name = 'XYZ';
     obj.mobile = String('9889121212');
-    const student = await this.studentRepository.save(obj);
-    console.log(student);
-    return student;
+    try {
+      const student = await this.studentRepository.save(obj);
+      console.log(student);
+      return student;
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async update(dto: UserDto, personId: number) {
@@ -200,7 +226,11 @@ export class UserService {
       );
 
     // clear() method can be used.. it truncate the table data.. remove all rows from table.
-    await this.studentRepository.clear();
+    try {
+      await this.studentRepository.clear();
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
     return 'deleted all';
   }
 }
