@@ -91,7 +91,7 @@ export class AuthService {
       obj.httpVerb = 'get';
       obj.role = 'user';
       obj.url = getUrl;
-      obj.email = user.email;
+      obj.emailId = user.email;
       obj.user = user;
 
       permit.push({
@@ -110,7 +110,7 @@ export class AuthService {
       getObj.role = 'admin';
       getObj.httpVerb = 'get';
       getObj.url = getUrl;
-      getObj.email = user.email;
+      getObj.emailId = user.email;
       getObj.user = user;
 
       permit.push({
@@ -126,7 +126,7 @@ export class AuthService {
       updateObj.role = 'admin';
       updateObj.httpVerb = 'put';
       updateObj.url = putUrl;
-      updateObj.email = user.email;
+      updateObj.emailId = user.email;
       updateObj.user = user;
 
       permit.push({
@@ -145,7 +145,7 @@ export class AuthService {
       getObj.role = 'super-admin';
       getObj.httpVerb = 'get';
       getObj.url = getUrl;
-      getObj.email = user.email;
+      getObj.emailId = user.email;
       getObj.user = user;
 
       permit.push({
@@ -162,7 +162,7 @@ export class AuthService {
       updateObj.role = 'super-admin';
       updateObj.httpVerb = 'put';
       updateObj.url = putUrl;
-      updateObj.email = user.email;
+      updateObj.emailId = user.email;
       updateObj.user = user;
 
       permit.push({
@@ -179,7 +179,7 @@ export class AuthService {
       createObj.role = 'super-admin';
       createObj.httpVerb = 'post';
       createObj.url = postUrl;
-      createObj.email = user.email;
+      createObj.emailId = user.email;
       createObj.user = user;
 
       permit.push({
@@ -196,7 +196,7 @@ export class AuthService {
       deleteObj.role = 'super-admin';
       deleteObj.httpVerb = 'delete';
       deleteObj.url = deleteUrl;
-      deleteObj.email = user.email;
+      deleteObj.emailId = user.email;
       deleteObj.user = user;
       permit.push({
         requestMethod: deleteObj.httpVerb,
@@ -217,7 +217,7 @@ export class AuthService {
 
   async signin(dto: SignInDto) {
     // Check if email is already existing , and then return the user details ( rows from DB)
-    console.log('Inside sign in | login service impl ', dto.email);
+    console.log('Inside sign in | login service impl ', dto);
     const user = await this.userRepository.findOneBy({
       email: dto.email,
     });

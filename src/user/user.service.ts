@@ -206,7 +206,7 @@ export class UserService {
 
     if (!stud) {
       throw new NotFoundException(
-        'Student with Given id is not found for update!!',
+        'Student with Given id is not found for delete!!',
       );
     }
 
