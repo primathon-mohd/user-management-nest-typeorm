@@ -16,7 +16,7 @@ export class PermissionDto {
 
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  emailId: string;
 
   @IsNotEmpty()
   user: RegisteredUser;
