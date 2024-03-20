@@ -4,7 +4,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Req,
@@ -13,16 +15,27 @@ import {
 import { StudentDto } from './dto';
 import { Request } from 'express';
 import { JwtGuard } from 'src/auth/guard';
+import { ApiBearerAuth, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('USER')
+@ApiResponse({ status: 401, description: 'Unauthorized.' })
+@ApiBearerAuth()
 @Controller('user')
 @UseGuards(JwtGuard)
 export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('info/:id')
+  @ApiResponse({
+    status: 200,
+    description: 'The record has been successfully retrieved.',
+  })
+  // @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiParam({ name: 'id' })
   // @UseGuards(AuthGuard('jwt'))
   //   @UseGuards(JwtGuard)
-  getInfo(@Req() req: Request, @Param('id') id: number) {
+  getInfo(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
+    // // new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     // console.log("------------------------->",req.user," :::::::::: ",req.user["email"],":::::::::::::::");
     // const userInfo = req.user;
     //userInfo.email   === { sub: 6, email: 'efg@gmail.com', iat: 1707394707, exp: 1707395607 }
@@ -47,6 +60,11 @@ export class UserController {
     return msg;
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'The records have been successfully retrieved.',
+  })
+  // @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Get('all')
   getAll(@Req() req: Request) {
     const userEmail = req.user['email'];
@@ -54,6 +72,10 @@ export class UserController {
     return this.userService.getAll(userEmail);
   }
 
+  @ApiResponse({
+    status: 201,
+    description: 'The record has been successfully created.',
+  })
   @Post('create')
   create(@Req() req: Request, @Body() dto: StudentDto) {
     const userEmail = req.user['email'];
@@ -62,10 +84,19 @@ export class UserController {
     return this.userService.create(dto, userEmail);
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'The record has been successfully updated.',
+  })
+  @ApiParam({ name: 'id' })
   @Put('update/:id')
   update(
     @Body() dto: StudentDto,
-    @Param('id') id: number,
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
     @Req() req: Request,
   ) {
     const userEmail = req.user['email'];
@@ -73,6 +104,11 @@ export class UserController {
     return this.userService.update(dto, id, userEmail);
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'The record has been successfully deleted.',
+  })
+  @ApiParam({ name: 'id' })
   @Delete('delete/:id')
   delete(@Param('id') id: number, @Req() req: Request) {
     const userEmail = req.user['email'];
@@ -80,6 +116,10 @@ export class UserController {
     return this.userService.delete(userEmail, id);
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'The records have been successfully deleted.',
+  })
   @Delete('deleteAll')
   deleteAll(@Req() req: Request) {
     const userEmail = req.user['email'];

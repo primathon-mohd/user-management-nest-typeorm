@@ -260,7 +260,7 @@ export class AuthService {
     let token: any;
     try {
       token = await this.jwtService.signAsync(payload, {
-        expiresIn: '2h',
+        expiresIn: '24h',
         secret: this.config.get('JWT_SECRET'),
       });
     } catch (err) {
